@@ -1,60 +1,50 @@
 import { config } from "dotenv";
-config();
+ config();
+import TelegramBot from "node-telegram-bot-api";
+//const botToken = new Bot(process.env.BOT_API_KEY)
+//const testKey = "6469a721bede21a8ed89";
+//import stripe from "stripe";
+//import axios from "axios";
 
-import { InlineKeyboard, Bot, GrammyError, HttpError, Keyboard } from "grammy";
+//const botToken = "6985342414:AAFxpkOhbpnMLBgpI_j9AX_jrHIuNwQrmug";
+
+//const chatId = "1227459883";
 const webAppUrl = "https://biznewschannel.com/";
-const bot = new Bot(process.env.BOT_API_KEY);
 
-bot.command("start", async (ctx) => {
-  const startKeyboard = new Keyboard()
-    .text("Оплатить криптой")
-    .row()
-    .text("Stripe")
-    .row()
-    .text("Документация")
-    .resized();
-  await ctx.reply("Приветствую!");
-  await ctx.reply("Окунись в мир новостей и событий!",{
-    reply_markup: startKeyboard,
-  });
-});
+const bot = new TelegramBot(process.env.BOT_API_KEY)
 
-bot.hears(["Оплатить криптой", "Stripe", "Документация"], async (ctx) => {
-  const inlineKeyboard = new InlineKeyboard()
-    .text("Click me", 
-    JSON.stringify({
-         type:ctx.message.text,
-         questionId: 1,
-         }),
-    )
-    .text("Отменить", "cancel");
-  await ctx.reply(`Hello! ${ctx.message.text} `, {
-    reply_markup: inlineKeyboard,
-  });
-});
 
-bot.on("callback_query:data", async (ctx) => {
- if(ctx.callbackQuery.data === "cancel"){
-   await ctx.reply("Отменено!")
-   await ctx.answerCallbackQuery()
-   return;
- }
- const callbackData = JSON.parse(ctx.callbackQuery.data);
- await ctx.reply(` ${callbackData.type} - это круто!`);
- await ctx.answerCallbackQuery()
-});
+bot.on("message", async (msg) => {
+  
+  const chatId = msg.chat.id;
+  const text = msg.text;
 
-bot.catch((err) => {
-  const ctx = err.ctx;
-  console.error(`Error while handling update ${ctx.update.update_id}:`);
-  const e = err.error;
-  if (e instanceof GrammyError) {
-    console.error("Error in request:", e.description);
-  } else if (e instanceof HttpError) {
-    console.error("Could not contact Telegram:", e);
-  } else {
-    console.error("Unknown error:", e);
+  if (text === "/start") {
+    await bot.sendMessage(
+      chatId,
+      `<i>Вас приветствует</i> <b>SettingNewsBot - бот для постинга</b><i> последних новостей ,публикаций и статей </i> <b><a href="https://biznewschannel.com/video">подробнее на сайте</a></b>`,
+      {
+        parse_mode: "HTML",
+        reply_markup: {
+          keyboard: [
+            [
+             
+
+              { text: "🌐 Оплата криптой" },
+              { text: "📰 Постинг", web_app: { url: webAppUrl } },
+            ],
+            [{ text: "💳 Оплатить стандарт" }],
+            [{ text: "🔍 Запрос к API Crypto Pay" }],
+            
+            [{ text: "Создать счет", callback_data: "create_invoice" }],
+            
+            [{ text: "Закрыть" }],
+          ],
+        },
+      }
+    );
   }
 });
 
-bot.start();
+
+ bot.startPolling();
